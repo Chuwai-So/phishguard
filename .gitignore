@@ -1,0 +1,69 @@
+# =========================
+# Python bytecode / caches
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# Virtual environments
+# =========================
+.venv/
+venv/
+env/
+
+# =========================
+# Packaging / build
+# =========================
+build/
+dist/
+*.egg-info/
+
+# =========================
+# Jupyter / IPython
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# OS / Editor noise
+# =========================
+.DS_Store
+Thumbs.db
+
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# ML artifacts (models, metrics)
+# =========================
+artifacts/
+models/
+checkpoints/
+
+# =========================
+# Datasets (IMPORTANT)
+# =========================
+data/
+
+# If you ever want to keep small example data, you can allow it like this:
+# !data/example/
+# !data/example/*.csv
+
+# =========================
+# Temporary / scratch
+# =========================
+tmp/
+.cache/
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
