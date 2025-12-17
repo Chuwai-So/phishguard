@@ -42,7 +42,7 @@ def main():
         prepare_dataset(cmd_args)
         sys.exit(0)
     elif args.command == "train":
-        train()
+        train(cmd_args)
         sys.exit(0)
     elif args.command == "evaluate":
         evaluate()

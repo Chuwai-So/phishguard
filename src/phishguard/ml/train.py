@@ -1,12 +1,12 @@
 import joblib
 import numpy as np
-
+import argparse
 from pathlib import Path
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix, classification_report
 
-from phishguard.data.loader import load_csv, split_df
+from phishguard.data.loader import load_csv, split_df, split_df_grouped
 from phishguard.ml.features import extract_features
 
 #Stacking feature vectors into matrix
@@ -14,11 +14,25 @@ def _featurize(urls) -> np.ndarray:
     return np.vstack([extract_features(u) for u in urls])
 
 #hardcoded paths
-def train() -> None:
-    dataset_path = Path("data/raw/dataset.csv")
+def train(argv: list[str] | None = None) -> None:
+    p = argparse.ArgumentParser(description="Train phishguard model")
+    p.add_argument(
+        "--dataset",
+        type = Path,
+        default = Path("data/processed/urls_clean.csv"),
+        help = "Path to the dataset",
+    )
+    p.add_argument(
+        "--artifacts-dir",
+        type = Path,
+        default = Path("artifacts"),
+        help = "Where to save artifacts",
+    )
+    args = p.parse_args(argv)
+    dataset_path = Path(args.dataset)
 
     df = load_csv(dataset_path)
-    splits = split_df(df)
+    splits = split_df_grouped(df)
 
     #Preperation
     x_train = _featurize(splits.train_frame["url"])
@@ -39,17 +53,28 @@ def train() -> None:
     model.fit(x_train, y_train)
 
     #Evaluate on validation
-    val_pred = model.predict(x_val)
+    val_p = model.predict_proba(x_val)[:, 1]
+    #fine tunning model with higher FN rate:
+    t = 0.2
+    val_pred = (val_p >= t).astype(int)
     print("\n[train] Validation confusion matrix:\n", confusion_matrix(y_val, val_pred))
     print("[train] Validation report:\n", classification_report(y_val, val_pred, digits=4))
 
+    #Evaluate on test
+    test_p = model.predict_proba(x_test)[:, 1]
+    t = 0.2
+    test_pred = (test_p >= t).astype(int)
+    print("\n[test] Test confusion matrix:\n", confusion_matrix(y_test, test_pred))
+    print("[test] Test report:\n", classification_report(y_test, test_pred, digits=4))
+
     #Save artifact
-    artifact_dir = Path("artifacts")
-    artifact_dir.mkdir(exist_ok=True)
+    artifact_dir = Path(args.artifacts_dir)
+    artifact_dir.mkdir(parents=True, exist_ok=True)
 
     joblib.dump(
         {
             "model": model,
+            "threshhold": t,
             "features_dim": x_train.shape[1],
             "features_version": 1,
         },
